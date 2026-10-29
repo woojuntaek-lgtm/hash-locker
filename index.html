@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#151a22">
+<title>해시 사물함</title>
+<meta name="description" content="상자만 바꿨는데 2,500배 빨라졌다 — 파이썬 딕셔너리와 세트, 해시 테이블과 충돌, 열쇠의 자격, 중복 제거와 집합 연산, 개수 세기를 손으로 체험하는 앱">
+<style>
+:root{--bg:#151a22;--card:#1c232e;--card2:#25303d;--fg:#eff3f8;--mut:#a3b0c2;--line:#33425a;
+--a:#7cc4ff;--b:#ff9b5c;--ok:#6fdc9a;--bad:#ff7d7d;--gold:#ffd166;--pur:#b79cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;line-height:1.55}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:1.2rem;margin:6px 0}
+h1 small{display:block;font-size:.76rem;color:var(--mut);font-weight:400}
+.tabs{display:flex;gap:5px;margin:10px 0}
+.tabs button{flex:1;padding:9px 2px;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:10px;font-size:.84rem;font-weight:600}
+.tabs button.on{background:#24406e;color:#fff;border-color:var(--a)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+h2{font-size:1rem;margin:2px 0 8px}
+.note{font-size:.86rem;color:var(--mut);margin:8px 0 0}
+.note b{color:var(--fg)}
+.btn{padding:11px 14px;border-radius:12px;border:0;background:linear-gradient(135deg,#2f6fd0,#7cc4ff);color:#fff;font-weight:800;font-size:.95rem;flex:1}
+.btn.sec{background:var(--card2);border:1px solid var(--line);color:var(--fg);font-weight:700}
+.btn.sm{flex:none;padding:7px 11px;font-size:.82rem}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row+.row{margin-top:8px}
+.pill{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.84rem}
+.pill.on{border-color:var(--gold);background:#4a3e1a;color:#fff}
+canvas{display:block;width:100%;border-radius:12px;background:#10141b;margin-top:8px}
+.say{background:#16304c;border-left:3px solid var(--a);border-radius:8px;padding:9px 11px;font-size:.92rem;margin-top:10px}
+.say b{color:#fff}
+.say.q{border-left-color:var(--b);background:#2e2118}
+.res{margin-top:10px;font-size:.92rem;border-radius:10px;padding:10px 12px}
+.res.g{background:#16352a;border:1px solid #2f7a52}
+.res.r{background:#3a1d1d;border:1px solid #8a3a3a}
+.res.y{background:#3a3218;border:1px solid #8a7a3a}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.code{background:#0f131a;border:1px solid #26324a;border-radius:10px;padding:9px 11px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.6;white-space:pre;overflow-x:auto;margin-top:8px}
+.code .k{color:#ff9bd2}.code .s{color:#a5e38a}.code .c{color:#6b7a90}.code .n{color:#ffd166}.code .f{color:#7cc4ff}
+.out{background:#0b0e13;border-radius:10px;padding:8px 11px;margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.84rem;min-height:38px;white-space:pre-wrap;word-break:break-all}
+.out .e{color:#ff7d7d}.out .p{color:#6b7a90}
+.opsg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.opsg button{padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.8rem;font-family:ui-monospace,Menlo,Consolas,monospace;text-align:left}
+.opsg button.e{border-color:#8a3a3a}
+.dview{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.dview div{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;background:var(--card2);border-radius:8px;padding:6px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.84rem;transition:background .3s}
+.dview div.fl{background:#3a3218}
+.dview span.kk{background:#24406e;border-radius:6px;padding:1px 8px}
+.slots{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px}
+.slots div{border:1px dashed #55667f;border-radius:8px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;transition:background .3s,border-color .3s}
+.slots div .ix{font-size:.62rem;color:#55667f}
+.slots div.f{border-style:solid;border-color:#33425a;background:#24406e}
+.slots div.hit{background:#4a3e1a;border-color:#ffd166}
+.slots div.probe{background:#5a2626;border-color:#ff7d7d}
+.slots div.new{background:#1f5a3c;border-color:#6fdc9a}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.stats div{background:var(--card2);border-radius:10px;padding:7px 6px;text-align:center;font-size:.74rem;color:var(--mut)}
+.stats div b{display:block;font-size:1.02rem;color:var(--fg);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.bars .d{display:grid;grid-template-columns:72px 1fr 92px;gap:8px;align-items:center;font-size:.82rem}
+.bars .bar{height:16px;border-radius:8px;transition:width .6s}
+.bars .d b{text-align:right;font-variant-numeric:tabular-nums}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opts button{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.9rem;font-family:ui-monospace,Menlo,Consolas,monospace}
+.opts button.right{border-color:#6fdc9a;background:#16352a}
+.opts button.wrong{border-color:#ff7d7d;background:#3a1d1d}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.chips span{background:#24406e;border-radius:8px;padding:4px 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.86rem;transition:opacity .3s}
+.chips span.dup{opacity:.25;text-decoration:line-through}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.keys button{padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem}
+.keys button.ok{border-color:#6fdc9a;background:#16352a}.keys button.no{border-color:#ff7d7d;background:#3a1d1d}
+.cnt{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.cnt .d{display:grid;grid-template-columns:28px 1fr 30px;gap:8px;align-items:center;font-family:ui-monospace,Menlo,Consolas,monospace}
+.cnt .bar{height:18px;border-radius:6px;background:#b79cff;transition:width .3s}
+input[type=text]{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#10141b;color:var(--fg);font-size:.92rem}
+.sum3{margin-top:12px;background:linear-gradient(135deg,#1d3358,#3a2a5a);border-radius:14px;padding:12px 14px}
+.sum3 ol{margin:4px 0;padding-left:20px;font-size:.92rem}
+.mine{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.mine div{display:flex;justify-content:space-between;gap:8px;background:var(--card2);border-radius:10px;padding:8px 10px;font-size:.88rem}
+.mine button{border:0;background:none;color:var(--mut);font-size:.9rem}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+footer{text-align:center;color:var(--mut);font-size:.78rem;margin-top:18px}
+footer a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🔐 해시 사물함<small>상자만 바꿨는데 2,500배 빨라졌다 — 딕셔너리와 세트</small></h1>
+<div class="tabs">
+  <button class="on" data-tab="t1">① 딕셔너리</button>
+  <button data-tab="t2">② 해시</button>
+  <button data-tab="t3">③ 세트</button>
+  <button data-tab="t4">④ 세기</button>
+</div>
+
+<!-- ① -->
+<section id="tab-t1">
+  <div class="card">
+    <h2>🏷️ 이름표로 찾는 상자</h2>
+    <p class="note" style="margin-top:0">번호 대신 <b>열쇠</b>(이름표)로 값을 찾습니다. 버튼을 눌러 보세요.</p>
+    <div class="code">d = {<span class="s">"온도"</span>: <span class="n">23.5</span>, <span class="s">"상태"</span>: <span class="s">"정상"</span>}</div>
+    <div class="dview" id="dv"></div>
+    <div class="opsg" id="dops">
+      <button data-o="get">d["온도"]</button>
+      <button data-o="set">d["상태"] = "점검"</button>
+      <button data-o="add">d["속도"] = 120</button>
+      <button data-o="miss" class="e">d["압력"]</button>
+      <button data-o="g1">d.get("압력")</button>
+      <button data-o="g2">d.get("압력", 0)</button>
+      <button data-o="pop">d.pop("속도")</button>
+      <button data-o="del">del d["상태"]</button>
+      <button data-o="items">d.items()</button>
+      <button data-o="clear">d.clear()</button>
+    </div>
+    <div class="out" id="dOut"><span class="p">&gt;&gt;&gt; 버튼을 눌러 보세요</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec sm" id="dRe">↺ 처음 딕셔너리</button></div>
+  </div>
+  <div class="card">
+    <h2>✍️ 같은 열쇠를 두 번 쓰면</h2>
+    <div class="code">d = {<span class="s">"상태"</span>: <span class="s">"off"</span>, <span class="s">"상태"</span>: <span class="s">"on"</span>}</div>
+    <div class="row" style="margin-top:8px"><button class="btn sec" id="dupGo">▶ 실행</button></div>
+    <div id="dupOut"></div>
+  </div>
+  <div class="card">
+    <h2>🏭 딕셔너리 안의 딕셔너리 — 설비 100대</h2>
+    <div class="code">설비 = {<span class="s">"M101"</span>: {<span class="s">"온도"</span>: <span class="n">71.2</span>, <span class="s">"상태"</span>: <span class="s">"정상"</span>},
+        <span class="s">"M102"</span>: {<span class="s">"온도"</span>: <span class="n">88.9</span>, <span class="s">"상태"</span>: <span class="s">"주의"</span>}, …}</div>
+    <div class="row" style="margin-top:8px"><input type="text" id="eqIn" value="M101" maxlength="6" style="max-width:110px"><button class="btn sec sm" data-eq="br">설비[번호]["온도"]</button><button class="btn sec sm" data-eq="get">.get(번호, {}).get("온도")</button></div>
+    <div class="out" id="eqOut"><span class="p"># M101~M200 중 하나, 또는 없는 번호(M999)를 넣어 보세요</span></div>
+    <p class="note">설비 번호만 알면 백 대든 만 대든 곧장 찾아갑니다 — 실제 공장을 그대로 옮겨 놓은 <b>디지털 트윈</b>에 자주 쓰는 모양.</p>
+  </div>
+</section>
+
+<!-- ② -->
+<section id="tab-t2" hidden>
+  <div class="card">
+    <h2>🔢 해시 테이블 — 열쇠 → 정수 → 칸 번호</h2>
+    <p class="note" style="margin-top:0"><b>해시 함수</b>(번역기)가 열쇠를 정수로 바꾸고, <b>칸 수로 나눈 나머지</b>가 칸 번호. 정수 열쇠의 해시는 그 수 자신입니다. 숫자를 넣어 보세요. <span style="color:#6b7a90">(빈칸 찾기는 다음 칸으로 가는 단순한 방식으로 보여 줍니다 — 실제 파이썬은 더 고르게 흩어 찾아갑니다)</span></p>
+    <div class="row"><input type="text" id="hIn" value="23" maxlength="6" style="max-width:100px" inputmode="numeric"><button class="btn sm" id="hAdd">넣기</button><button class="btn sec sm" id="hFind">찾기</button><button class="btn sec sm" id="hEx">센서 예 23·25·27·30</button><button class="btn sec sm" id="hRe">↺</button></div>
+    <div class="slots" id="slots"></div>
+    <div class="stats"><div>칸 수<b id="hCap">8</b></div><div>들어 있는 수<b id="hN">0</b></div><div>찾을 때 본 칸<b id="hSteps">—</b></div></div>
+    <div id="hMsg"></div>
+  </div>
+  <div class="card">
+    <h2>🏁 첫 장면의 비밀 — 100만 개에서 찾기</h2>
+    <div class="row"><button class="pill on" data-rc="t">무작위 1,000개 찾기</button><button class="pill" data-rc="l">맨 끝 하나 찾기</button><button class="pill" data-rc="m">메모리</button></div>
+    <div class="bars" id="rcBars"></div>
+    <div id="rcMsg"></div>
+    <p class="note">※ 원고에서 파이썬 3.13 한 컴퓨터로 잰 값이며 환경에 따라 다릅니다(메모리는 원소 자체 크기 제외).</p>
+  </div>
+  <div class="card">
+    <h2>❓ 퀴즈 ① 1과 True</h2>
+    <div class="code">d = {<span class="n">1</span>: <span class="s">"a"</span>, <span class="k">True</span>: <span class="s">"b"</span>}
+<span class="f">print</span>(d)</div>
+    <div class="opts" id="q1"><button data-a="two">{1: 'a', True: 'b'}</button><button data-a="one">{1: 'b'}</button><button data-a="err">오류</button></div>
+    <div id="q1Msg"></div>
+  </div>
+</section>
+
+<!-- ③ -->
+<section id="tab-t3" hidden>
+  <div class="card">
+    <h2>🗝️ 열쇠가 될 자격 — 해시할 수 있는가</h2>
+    <p class="note" style="margin-top:0">딕셔너리 열쇠·세트 원소는 <b>한 번 만들면 바뀌지 않는 값</b>이어야 합니다. 눌러서 <span class="mono">{값: 1}</span>을 만들어 보세요.</p>
+    <div class="keys" id="keys"></div>
+    <div class="out" id="kOut"><span class="p">&gt;&gt;&gt; 하나를 눌러 보세요</span></div>
+  </div>
+  <div class="card">
+    <h2>🧹 중복 지우기</h2>
+    <div class="code">기록 = [<span class="n">23</span>, <span class="n">25</span>, <span class="n">23</span>, <span class="n">27</span>, <span class="n">25</span>, <span class="n">23</span>, <span class="n">30</span>]</div>
+    <div class="chips" id="rec"></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec" id="dd1">set(기록)</button><button class="btn sec" id="dd2">dict.fromkeys</button></div>
+    <div class="out" id="ddOut"><span class="p">&gt;&gt;&gt; 둘 중 하나를 눌러 보세요</span></div>
+    <div id="ddMsg"></div>
+  </div>
+  <div class="card">
+    <h2>⭕ 교집합 · 합집합 · 차집합</h2>
+    <div class="code">A = {<span class="s">"T1"</span>, <span class="s">"T3"</span>, <span class="s">"P2"</span>, <span class="s">"V5"</span>}   <span class="c"># 라인 A 경고</span>
+B = {<span class="s">"T3"</span>, <span class="s">"V5"</span>, <span class="s">"H1"</span>}         <span class="c"># 라인 B 경고</span></div>
+    <div class="row" style="margin-top:8px" id="setOps"><button class="pill on" data-so="and">A &amp; B</button><button class="pill" data-so="or">A | B</button><button class="pill" data-so="ab">A - B</button><button class="pill" data-so="ba">B - A</button><button class="pill" data-so="xor">A ^ B</button></div>
+    <canvas id="cvV"></canvas>
+    <div class="out" id="soOut"></div>
+  </div>
+  <div class="card">
+    <h2>❓ 퀴즈 ② A에만 있는 센서</h2>
+    <div class="say q">라인 <b>A에서만</b> 경고가 나고 B에서는 나지 않은 센서를 구하는 코드는?</div>
+    <div class="opts" id="q2"><button data-a="and">A &amp; B</button><button data-a="sub">A - B</button><button data-a="or">A | B</button></div>
+    <div id="q2Msg"></div>
+  </div>
+</section>
+
+<!-- ④ -->
+<section id="tab-t4" hidden>
+  <div class="card">
+    <h2>🧮 개수를 세는 딕셔너리</h2>
+    <p class="note" style="margin-top:0">불량 코드가 들어올 때마다 <span class="mono">횟수[코드] = 횟수.get(코드, 0) + 1</span>. 처음 나온 코드도 오류 없이 셉니다.</p>
+    <div class="row"><input type="text" id="cIn" value="ABACAB" maxlength="40" class="mono"><button class="btn sm" id="cGo">▶ 하나씩 세기</button></div>
+    <div class="chips" id="cStream"></div>
+    <div class="cnt" id="cBars"></div>
+    <div class="out" id="cOut"></div>
+    <div class="code"><span class="k">from</span> collections <span class="k">import</span> Counter
+<span class="f">Counter</span>(<span class="s">"ABACAB"</span>)      <span class="c"># 한 줄로 끝!</span></div>
+    <div class="say">목록에서 찾기, 중복 지우기, 세기 — 모두 <b>해시</b> 덕분입니다.</div>
+  </div>
+  <div class="card">
+    <h2>📌 세 줄 정리</h2>
+    <div class="sum3"><ol>
+      <li>딕셔너리는 해시로 열쇠의 칸을 <b>곧장 계산</b>해 데이터가 많아도 빠르게 찾고, 대신 <b>공간을 더</b> 쓴다.</li>
+      <li>같은 열쇠는 <b>덮어씌워지고</b>, 없는 열쇠는 <b>get</b>으로 안전하게 찾으며, 열쇠는 <b>바뀌지 않는 값</b>이어야 한다.</li>
+      <li>세트는 <b>중복을 지우고</b> 교집합, 합집합, 차집합을 한 줄로 계산한다.</li>
+    </ol></div>
+  </div>
+  <div class="card">
+    <h2>🤔 생각해 볼 질문</h2>
+    <p class="note" style="margin-top:0">지금 코드에서 <b>리스트에 in을 써서 찾는 곳이 반복문 안에</b> 들어 있지는 않나요? 그런 곳을 세트로 바꿔 볼 후보로 적어 보세요. 다만 순서가 필요하거나 데이터가 아주 적다면 리스트가 나을 수도 — 바꾼 뒤 직접 시간을 재 보세요. (이 기기에만 저장)</p>
+    <div class="row" style="margin-top:8px"><input type="text" id="myIn" maxlength="60" placeholder="예: 출석 확인할 때 학번 리스트 검색"><button class="btn sm" id="myAdd">추가</button></div>
+    <div class="mine" id="mine"></div>
+  </div>
+</section>
+
+<footer>© 2026 정필 수심명 · <a href="https://blog.naver.com/omyman" target="_blank" rel="noopener">blog.naver.com/omyman</a><br>파이썬 06 부록 · 인터넷 없이 동작</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800);}
+const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n);}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function prep(cv,ratio){const dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||320,h=Math.round(w*ratio);
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return{c,w,h};}
+function T(c,s,x,y,col,size,al,bl,wt){c.fillStyle=col;c.font=`${wt||''} ${size||12}px -apple-system,"Malgun Gothic",sans-serif`;c.textAlign=al||'center';c.textBaseline=bl||'middle';c.fillText(s,x,y);}
+function single(sel,attr,fn){$$(sel).forEach(b=>b.onclick=()=>{$$(sel).forEach(x=>x.classList.toggle('on',x===b));fn(b.dataset[attr]);});}
+function quiz(id,ans,fn){$$(`#${id} button`).forEach(b=>b.onclick=()=>{const ok=b.dataset.a===ans;$$(`#${id} button`).forEach(x=>x.className=x.dataset.a===ans?'right':x===b?'wrong':'');vib(ok?[30,40,60]:80);$(`#${id}Msg`).innerHTML=fn(ok);});}
+const pyv=v=>typeof v==='string'?`'${v}'`:String(v);
+const pyd=d=>'{'+Object.entries(d).map(([k,v])=>`'${k}': ${pyv(v)}`).join(', ')+'}';
+
+/* ===== ① 딕셔너리 ===== */
+let D,flash=null;
+function dReset(){D={'온도':23.5,'상태':'정상'};flash=null;dDraw();$('#dOut').innerHTML='<span class="p">&gt;&gt;&gt; 버튼을 눌러 보세요</span>';}
+function dDraw(){const e=Object.entries(D);$('#dv').innerHTML=e.length?e.map(([k,v])=>`<div class="${flash===k?'fl':''}"><span class="kk">'${k}'</span><span>→ ${pyv(v)}</span></div>`).join(''):'<div><span class="p" style="color:#6b7a90">{} — 상자는 그대로, 내용만 비었음</span></div>';}
+$$('#dops button').forEach(b=>b.onclick=()=>{const o=b.dataset.o;let out='';flash=null;
+  if(o==='get'){out=`&gt;&gt;&gt; d["온도"]\n${'온도' in D?pyv(D['온도']):'<span class="e">KeyError: \'온도\'</span>'}`;flash='온도';}
+  else if(o==='set'){const had='상태' in D;D['상태']='점검';flash='상태';out=`&gt;&gt;&gt; d["상태"] = "점검"\n<span class="p"># ${had?'있던 열쇠 → 값이 바뀜':'없던 열쇠 → 새로 들어감'}</span>`;}
+  else if(o==='add'){const had='속도' in D;D['속도']=120;flash='속도';out=`&gt;&gt;&gt; d["속도"] = 120\n<span class="p"># ${had?'있던 열쇠 → 값이 바뀜':'없던 열쇠 → 새로 들어감'}</span>`;}
+  else if(o==='miss'){out=`&gt;&gt;&gt; d["압력"]\n<span class="e">KeyError: '압력'</span>\n<span class="p"># 프로그램이 멈춤! 공장 시스템이라면 큰일</span>`;vib(80);}
+  else if(o==='g1'){out='&gt;&gt;&gt; d.get("압력")\n<span class="p"># None — 오류 대신 아무것도 없음</span>';}
+  else if(o==='g2'){out='&gt;&gt;&gt; d.get("압력", 0)\n0   <span class="p"># 기본값 0 — 없어도 멈추지 않음</span>';}
+  else if(o==='pop'){if('속도' in D){const v=D['속도'];delete D['속도'];out=`&gt;&gt;&gt; d.pop("속도")\n${v}   <span class="p"># 지우면서 값을 돌려줌</span>`;}else out='&gt;&gt;&gt; d.pop("속도")\n<span class="e">KeyError: \'속도\'</span>\n<span class="p"># 먼저 d["속도"] = 120을 눌러 보세요</span>';}
+  else if(o==='del'){if('상태' in D){delete D['상태'];out='&gt;&gt;&gt; del d["상태"]\n<span class="p"># 열쇠와 값을 함께 지움</span>';}else out='&gt;&gt;&gt; del d["상태"]\n<span class="e">KeyError: \'상태\'</span>';}
+  else if(o==='items'){out=`&gt;&gt;&gt; for k, v in d.items(): print(k, v)\n${Object.entries(D).map(([k,v])=>k+' '+v).join('\n')||'<span class="p">(비어 있음)</span>'}\n<span class="p"># keys() 열쇠만, values() 값만, items() 짝으로 — 넣은 순서대로 (3.7부터)</span>`;}
+  else if(o==='clear'){for(const k in D)delete D[k];out='&gt;&gt;&gt; d.clear()\n&gt;&gt;&gt; d\n{}';}
+  if(!['miss'].includes(o)&&!out.includes('<span class="e">'))out+=`\n&gt;&gt;&gt; d\n${esc(pyd(D))}`;
+  dDraw();$('#dOut').innerHTML=out;vib(10);});
+$('#dRe').onclick=dReset;
+$('#dupGo').onclick=()=>{vib(30);$('#dupOut').innerHTML=`<div class="out">&gt;&gt;&gt; d\n{'상태': 'on'}</div><div class="res y">오류 <b>없이</b> 열쇠 하나만 남고, 값은 나중에 쓴 <b>'on'</b>. 앞의 'off'는 <b>조용히 덮어씌워졌습니다</b> — 모르고 쓰면 데이터가 사라져도 눈치채지 못해요.</div>`;};
+const EQ={};for(let i=101;i<=200;i++){const t=60+((i*37)%35)+((i*13)%10)/10;EQ['M'+i]={'온도':+t.toFixed(1),'상태':t>88?'주의':'정상'};}EQ.M101={'온도':71.2,'상태':'정상'};EQ.M102={'온도':88.9,'상태':'주의'};
+$$('[data-eq]').forEach(b=>b.onclick=()=>{const k=$('#eqIn').value.trim().toUpperCase();const has=k in EQ;vib(has?15:60);
+  $('#eqOut').innerHTML=b.dataset.eq==='br'?(has?`&gt;&gt;&gt; 설비["${esc(k)}"]["온도"]\n${EQ[k]['온도']}   <span class="p"># 상태: ${EQ[k]['상태']}</span>`:`&gt;&gt;&gt; 설비["${esc(k)}"]["온도"]\n<span class="e">KeyError: '${esc(k)}'</span>`):`&gt;&gt;&gt; 설비.get("${esc(k)}", {}).get("온도")\n${has?EQ[k]['온도']:'None   <span class="p"># 바깥에서 빈 딕셔너리 {}를 받아 안쪽 get까지 오류 없이</span>'}`;});
+
+/* ===== ② 해시 테이블 ===== */
+let H=[],cap=8,n=0,lastHi={};
+function hReset(){cap=8;H=new Array(cap).fill(null);n=0;lastHi={};hDraw();$('#hMsg').innerHTML='';$('#hSteps').textContent='—';}
+function hDraw(){$('#slots').style.gridTemplateColumns=`repeat(8,1fr)`;$('#slots').innerHTML=H.map((v,i)=>`<div class="${v!==null?'f':''} ${lastHi[i]||''}"><span class="ix">${i}번</span>${v!==null?v:''}</div>`).join('');$('#hCap').textContent=cap;$('#hN').textContent=n;}
+function probe(key){const path=[];let i=((key%cap)+cap)%cap;while(H[i]!==null&&H[i]!==key){path.push(i);i=(i+1)%cap;}path.push(i);return path;}
+function insert(key,quiet){const path=probe(key);const at=path[path.length-1];if(H[at]===key)return{dup:true,path};H[at]=key;n++;return{path,at};}
+function resize(){const old=H.filter(v=>v!==null);cap*=2;H=new Array(cap).fill(null);n=0;old.forEach(k=>insert(k));}
+$('#hAdd').onclick=()=>{const k=parseInt($('#hIn').value,10);if(!Number.isFinite(k)){toast('정수를 넣어 주세요');return;}if(n>=48){toast('↺로 비워 주세요');return;}
+  const r=insert(k);lastHi={};let msg;
+  if(r.dup){r.path.forEach(i=>lastHi[i]='hit');msg=`<div class="res y">${k}는 이미 들어 있습니다 — 같은 열쇠는 <b>하나만</b>.</div>`;}
+  else{r.path.slice(0,-1).forEach(i=>lastHi[i]='probe');lastHi[r.at]='new';const home=((k%cap)+cap)%cap;
+    msg=`<div class="${r.path.length>1?'res r':'res g'}">hash(${k}) = ${k} → ${k} % ${cap} = <b>${home}번 칸</b>.${r.path.length>1?` 그런데 이미 차 있어 <b>해시 충돌</b>! 비어 있는 다른 칸(<b>${r.at}번</b>)을 찾아 들어갔습니다(개방 주소법).`:' 곧장 들어갔습니다.'}</div>`;}
+  let grew=false;if(n*3>cap*2){resize();grew=true;lastHi={};}
+  hDraw();$('#hMsg').innerHTML=msg+(grew?`<div class="say">📏 칸의 2/3 이상이 차서 테이블을 <b>${cap}칸</b>으로 넓히고 모두 <b>다시 배치</b>했습니다 — 칸이 차기 훨씬 전에 넓혀서 거의 항상 빠름.</div>`:'');vib(15);};
+$('#hFind').onclick=()=>{const k=parseInt($('#hIn').value,10);if(!Number.isFinite(k))return;const path=probe(k);lastHi={};path.forEach((i,j)=>lastHi[i]=j===path.length-1?(H[i]===k?'hit':'probe'):'probe');hDraw();const found=H[path[path.length-1]]===k;
+  $('#hSteps').textContent=path.length+'칸';$('#hMsg').innerHTML=`<div class="${found?'res g':'res y'}">${k} % ${cap} = ${((k%cap)+cap)%cap}번 칸으로 <b>곧장</b> → ${found?`찾았습니다! 본 칸 ${path.length}개${path.length>1?'(충돌로 옆 칸까지)':''}.`:`빈칸을 만나 "없음" 확정 (${path.length}칸).`} 리스트라면 처음부터 하나씩 최대 ${n}번 비교해야 해요.</div>`;vib(15);};
+$('#hEx').onclick=()=>{hReset();[23,25,27,30].forEach(k=>insert(k));hDraw();$('#hMsg').innerHTML=`<div class="say">23 % 8 = 7, 25 % 8 = 1, 27 % 8 = 3, 30 % 8 = 6 → 칸 순서대로 읽으면 <b>25, 27, 30, 23</b>. 실제 파이썬에서 <span class="mono">set([23, 25, 23, 27, 25, 23, 30])</span>을 출력하면 <b>{25, 27, 30, 23}</b> — 세트에 "순서가 없다"는 말의 정체입니다!</div>`;vib(15);};
+$('#hRe').onclick=hReset;
+const RC={t:[['리스트',5.61,'5.61초','#ff7d7d'],['세트',0.0022,'0.0022초','#6fdc9a'],['딕셔너리',0.00087,'0.00087초','#7cc4ff']],l:[['리스트',0.0108,'0.0108초','#ff7d7d'],['세트',0.0000058,'5.8마이크로초','#6fdc9a']],m:[['리스트',7.8,'약 7.8MB','#7cc4ff'],['세트',32,'약 32MB','#ffd166'],['딕셔너리',40,'약 40MB','#ff9b5c']]};
+function rcDraw(k){const r=RC[k],mx=Math.max(...r.map(x=>x[1]));$('#rcBars').innerHTML=r.map(([l,v,t,c])=>`<div class="d"><span>${l}</span><div class="bar" style="width:${Math.max(1.2,v/mx*100)}%;background:${c}"></div><b>${t}</b></div>`).join('');
+  $('#rcMsg').innerHTML=k==='t'?'<div class="res g">100만 개에 무작위 1,000번 <span class="mono">in</span>: 리스트 5.61초 → 세트 0.0022초, 약 <b>2,500배</b>. 리스트는 처음부터 하나씩(최악 100만 번), 세트는 칸 번호를 <b>한 번 계산</b>하고 곧장!</div>':k==='l'?'<div class="res g">맨 끝 값 하나: 리스트 약 0.01초, 세트 백만분의 6초 정도.</div>':'<div class="res y">대신 공간을 넉넉하게 씁니다 — 리스트 약 7.8MB, 세트 약 32MB, 딕셔너리 약 40MB. <b>속도를 공간으로 사는</b> 셈.</div>';}
+single('[data-rc]','rc',rcDraw);
+quiz('q1','one',ok=>`<div class="res ${ok?'g':'r'}">${ok?'🎉 정답!':'아쉽네요.'} <b class="mono">{1: 'b'}</b>. 파이썬에서 <span class="mono">True == 1</span>이고 <span class="mono">hash(True) == hash(1) == 1</span> → <b>같은 열쇠</b>로 취급. 열쇠 이름은 처음의 1이 남고 값은 나중의 'b'로 덮어씌워집니다. 열쇠가 같은지는 모양이 아니라 <b>값과 해시</b>로 판단!</div>`);
+
+/* ===== ③ 세트 ===== */
+const KEYS=[['3','ok',''],['2.5','ok',''],['"abc"','ok',''],['(1, 2)','ok','튜플은 바뀌지 않으니 OK'],['[1, 2]','no',"unhashable type: 'list'"],['{1, 2}','no',"unhashable type: 'set'"],['{"a": 1}','no',"unhashable type: 'dict'"],['(1, [2])','no',"unhashable type: 'list'"]];
+$('#keys').innerHTML=KEYS.map(([k],i)=>`<button data-k="${i}">${esc(k)}</button>`).join('');
+$$('#keys button').forEach(b=>b.onclick=()=>{const [k,r,m]=KEYS[+b.dataset.k];b.className=r;vib(r==='ok'?15:70);
+  $('#kOut').innerHTML=r==='ok'?`&gt;&gt;&gt; {${esc(k)}: 1}\n{${esc(k.replace(/"/g,"'"))}: 1}${m?`   <span class="p"># ${m}</span>`:''}`:`&gt;&gt;&gt; {${esc(k)}: 1}\n<span class="e">TypeError: ${m}</span>\n<span class="p"># 열쇠가 바뀌면 처음 계산한 칸 번호가 틀려져 값을 영영 못 찾음${k.startsWith('(1')?' — 튜플이라도 안에 리스트가 있으면 안 됨':''}</span>`;});
+const REC=[23,25,23,27,25,23,30];
+function recDraw(mark){$('#rec').innerHTML=REC.map((v,i)=>`<span class="${mark&&REC.indexOf(v)!==i?'dup':''}">${v}</span>`).join('');}
+$('#dd1').onclick=()=>{recDraw(true);$('#ddOut').innerHTML='&gt;&gt;&gt; set(기록)\n{25, 27, 30, 23}';$('#ddMsg').innerHTML='<div class="res y">같은 값은 하나만 남아 <b>4개</b>. 그런데 순서가 처음과 다르죠? 세트는 <b>순서가 없습니다</b>(② 탭 "센서 예"에서 칸 번호로 확인).</div>';vib(15);};
+$('#dd2').onclick=()=>{recDraw(true);$('#ddOut').innerHTML='&gt;&gt;&gt; list(dict.fromkeys(기록))\n[23, 25, 27, 30]';$('#ddMsg').innerHTML='<div class="res g">딕셔너리는 <b>넣은 순서를 기억</b>하니, 처음 나온 순서 그대로 중복만 지웁니다.</div>';vib(15);};
+const SA=['T1','T3','P2','V5'],SB=['T3','V5','H1'];let so='and';
+function vDraw(){const {c,w,h}=prep($('#cvV'),0.52);c.clearRect(0,0,w,h);const r=h*0.36,cxA=w*0.38,cxB=w*0.62,cy=h*0.5;
+  const res=so==='and'?SA.filter(x=>SB.includes(x)):so==='or'?[...new Set([...SA,...SB])]:so==='ab'?SA.filter(x=>!SB.includes(x)):so==='ba'?SB.filter(x=>!SA.includes(x)):[...SA.filter(x=>!SB.includes(x)),...SB.filter(x=>!SA.includes(x))];
+  const region=(x,y)=>{const inA=Math.hypot(x-cxA,y-cy)<r,inB=Math.hypot(x-cxB,y-cy)<r;return so==='and'?inA&&inB:so==='or'?inA||inB:so==='ab'?inA&&!inB:so==='ba'?inB&&!inA:inA!==inB;};
+  const img=c.getImageData(0,0,1,1);const dpr=Math.min(2,window.devicePixelRatio||1);for(let y=0;y<h;y+=3)for(let x=0;x<w;x+=3)if(region(x,y)){c.fillStyle='rgba(255,209,102,.28)';c.fillRect(x,y,3,3);}
+  [[cxA,'#7cc4ff','A'],[cxB,'#ff9b5c','B']].forEach(([x,col,l])=>{c.beginPath();c.arc(x,cy,r,0,7);c.strokeStyle=col;c.lineWidth=2.5;c.stroke();T(c,l,x+(l==='A'?-r*0.75:r*0.75),cy-r*0.85,col,15,'center','middle','800');});
+  const pos={T1:[cxA-r*0.55,cy-r*0.3],P2:[cxA-r*0.55,cy+r*0.3],T3:[(cxA+cxB)/2,cy-r*0.25],V5:[(cxA+cxB)/2,cy+r*0.25],H1:[cxB+r*0.55,cy]};
+  Object.entries(pos).forEach(([k,[x,y]])=>T(c,k,x,y,res.includes(k)?'#ffd166':'#55667f',14,'center','middle','800'));
+  const code={and:'A & B',or:'A | B',ab:'A - B',ba:'B - A',xor:'A ^ B'}[so],name={and:'교집합 — 두 라인 모두',or:'합집합 — 어느 한쪽이라도',ab:'차집합 — A에만',ba:'차집합 — B에만 (순서가 바뀌면 결과도 바뀜)',xor:'대칭차 — 한쪽에만 있는 것들'}[so];
+  $('#soOut').innerHTML=`&gt;&gt;&gt; ${esc(code)}\n{${res.map(x=>`'${x}'`).join(', ')}}   <span class="p"># ${name}</span>`;}
+single('[data-so]','so',k=>{so=k;vDraw();vib(10);});
+quiz('q2','sub',ok=>`<div class="res ${ok?'g':'r'}">${ok?'🎉 정답!':'아쉽네요.'} <b class="mono">A - B</b>, 차집합 → <b>{'T1', 'P2'}</b>. 라인 A에만 있는 문제니까 라인 A의 설비부터 점검! <span class="mono">B - A</span>를 하면 {'H1'}만 — 차집합은 <b>순서에 따라 결과가 달라집니다</b>.</div>`);
+
+/* ===== ④ 세기 ===== */
+let cTimer=null;
+$('#cGo').onclick=()=>{clearInterval(cTimer);const s=[...$('#cIn').value.replace(/\s|,/g,'').toUpperCase()].slice(0,40);if(!s.length)return;const cnt={};let i=0;$('#cStream').innerHTML=s.map((ch,k)=>`<span id="cs${k}" style="opacity:.3">${esc(ch)}</span>`).join('');
+  const draw=(last,isNew)=>{const mx=Math.max(1,...Object.values(cnt));$('#cBars').innerHTML=Object.entries(cnt).map(([k,v])=>`<div class="d"><b>${esc(k)}</b><div class="bar" style="width:${v/mx*100}%;${k===last?'background:#ffd166':''}"></div><span>${v}</span></div>`).join('');
+    $('#cOut').innerHTML=last?`&gt;&gt;&gt; 횟수["${esc(last)}"] = 횟수.get("${esc(last)}", 0) + 1   <span class="p"># ${isNew?'처음 → get이 0을 줌':'있던 값 + 1'}</span>\n${esc('{'+Object.entries(cnt).map(([k,v])=>`'${k}': ${v}`).join(', ')+'}')}`:'';};
+  cTimer=setInterval(()=>{if(i>=s.length){clearInterval(cTimer);const srt=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);$('#cOut').innerHTML+=`\n\n&gt;&gt;&gt; Counter("${esc(s.join(''))}")\nCounter({${esc(srt.map(([k,v])=>`'${k}': ${v}`).join(', '))}})`;return;}
+    const ch=s[i];const isNew=!(ch in cnt);cnt[ch]=(cnt[ch]||0)+1;$('#cs'+i).style.opacity=1;draw(ch,isNew);vib(8);i++;},420);};
+
+/* 나의 예 */
+const MK='hashlocker.mine';let mine=[];try{mine=JSON.parse(localStorage.getItem(MK)||'[]');if(!Array.isArray(mine))mine=[];}catch(e){mine=[];}
+const saveM=()=>{try{localStorage.setItem(MK,JSON.stringify(mine));}catch(e){}};
+function drawMine(){$('#mine').innerHTML=mine.length?mine.map((m,i)=>`<div><span>🔐 ${esc(m)}</span><button data-d="${i}" aria-label="지우기">✕</button></div>`).join(''):'<p class="note">반복문 안의 "리스트 in"이 첫 번째 후보입니다.</p>';
+  $$('#mine button').forEach(b=>b.onclick=()=>{mine.splice(+b.dataset.d,1);saveM();drawMine();});}
+$('#myAdd').onclick=()=>{const v=$('#myIn').value.trim();if(!v)return;mine.unshift(v);mine=mine.slice(0,30);saveM();$('#myIn').value='';drawMine();toast('세트로 바꿀 후보 추가!');};
+$('#myIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#myAdd').click();});
+
+/* 탭 */
+function redraw(){if(!$('#tab-t3').hidden)vDraw();}
+function show(t){$$('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));['t1','t2','t3','t4'].forEach(k=>$('#tab-'+k).hidden=k!==t);redraw();window.scrollTo(0,0);}
+$$('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(redraw,120);});
+dReset();hReset();rcDraw('t');recDraw(false);drawMine();
+})();
+</script>
+</body>
+</html>
